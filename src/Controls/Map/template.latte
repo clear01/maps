@@ -1,0 +1,28 @@
+<div id="{$identifier}" style=" width: {$settings['width']}; height: {$settings['height']}" data-map></div>
+<script type="text/javascript">
+    function createMap() {
+        let mapControl = Maps.Factory.createMapControl({$settings});
+        mapControl.init({$identifier})
+
+        return mapControl.map;
+    }
+
+    function initMap() {
+        let modal = document.getElementById({$identifier}).closest(".modal"); //fix for bootstrap modal
+        if (modal) {
+            $(modal).off('shown.bs.modal.map').on('shown.bs.modal.map', function (event) {
+                setTimeout(function () {
+                    let map = createMap()
+                    $(modal).off('hide.bs.modal.map').on('hide.bs.modal.map', function (event) {
+                        map.remove()
+                    });
+                }, 1);
+
+            });
+        } else {
+            createMap()
+        }
+    }
+
+    initMap()
+</script>

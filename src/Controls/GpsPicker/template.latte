@@ -1,0 +1,37 @@
+
+<input type="text" class="form-control w-100" id="{$identifier}-autocomplete"/>
+
+<div id="{$identifier}" style=" width: {$settings['width']}; height: {$settings['height']}" data-map></div>
+
+{$control}
+
+<script type="text/javascript">
+
+    function createMap() {
+        let mapPicker = Maps.Factory.createMapPicker({$settings});
+        mapPicker.init({$identifier})
+        {if $gps}
+        	mapPicker.setPosition({$gps->getLatitude()}, {$gps->getLongitude()}, true)
+        {/if}
+        return mapPicker.map;
+    }
+
+    function initMap() {
+        let modal = document.getElementById({$identifier}).closest(".modal");
+        if (modal) {
+            $(modal).off('shown.bs.modal.map').on('shown.bs.modal.map', function (event) {
+                setTimeout(function () {
+                    let map = createMap()
+                    $(modal).off('hide.bs.modal.map').on('hide.bs.modal.map', function (event) {
+                        map.remove()
+                    });
+                }, 1);
+
+            });
+        } else {
+            createMap()
+        }
+    }
+
+    initMap();
+</script>

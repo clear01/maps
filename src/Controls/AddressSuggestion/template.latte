@@ -1,0 +1,8 @@
+{$control}
+
+<script type="text/javascript">
+    let suggestion = Maps.Factory.createSuggestion({$apiKey});
+    suggestion.init(document.getElementById({$inputId}), (event, inputEl) => {
+       inputEl.dispatchEvent(new CustomEvent("maps.address.select", { 'detail': event.detail.selection.value.data }))
+	}, ['regional.address'])
+</script>

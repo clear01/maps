@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea/.gitignore
+.idea/composerJson.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/nette-mapy-cz.iml
+.idea/vcs.xml
+/vendor/
+.idea/php.xml

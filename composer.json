@@ -1,0 +1,24 @@
+{
+  "name": "clear01/maps",
+  "description": "Map control and gps picker for Nette Framework",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Clear 01 Development s.r.o.",
+      "email": "info@clear01.com"
+    }
+  ],
+  "require": {
+    "php": "^7.2",
+    "nette/application": "^2.4|^3.0",
+    "nette/forms": "^2.4|^3.0",
+    "latte/latte": "^2.4|^2.5",
+    "nette/utils": "^2.0|^3.0",
+    "nette/php-generator": "^3.0",
+    "nette/di": "^2.4|^3.0"
+  },
+  "autoload": {
+    "psr-4": { "Clear01\\Maps\\": "src/"}
+  }
+}

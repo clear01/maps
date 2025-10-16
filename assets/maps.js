@@ -53,6 +53,10 @@ Maps.MapControl = class extends Maps.BaseMap {
                     let icon = L.icon(mSettings.icon)
                     options.icon = icon;
                 }
+                if (mSettings.divIcon) {
+                    let icon = L.divIcon(mSettings.divIcon)
+                    options.icon = icon;
+                }
                 let marker = L.marker(coords, options).addTo(this.map).bindPopup(mSettings.title);
                 bounds.extend(coords)
             }

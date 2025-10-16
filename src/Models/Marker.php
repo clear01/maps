@@ -4,8 +4,9 @@ declare(strict_types = 1);
 namespace Clear01\Maps\Models;
 
 use Clear01\Maps\Exceptions\MapException;
-use Nette\Utils\ArrayHash;
 use Nette\Utils\Json;
+use function array_merge;
+use const JSON_OBJECT_AS_ARRAY;
 
 class Marker
 {
@@ -18,42 +19,42 @@ class Marker
 	public function __construct(
 		GpsCoords $gps,
 		?string $title = null,
-		array $icon = []
+		array $data = []
 	) {
-		$this->data = new ArrayHash();
+
 		$this->setLatitude($gps->getLatitude());
 		$this->setLongitude($gps->getLongitude());
 		$this->setTitle($title);
-		$this->setIcon($icon);
+		$this->addData($data);
 	}
 
 
 	public function setLatitude(float $latitude): void
 	{
-		$this->data->latitude = $latitude;
+		$this->data['latitude'] = $latitude;
 	}
 
 
 	public function setLongitude(float $longitude): void
 	{
-		$this->data->longitude = $longitude;
+		$this->data['longitude'] = $longitude;
 	}
 
 
-	public function setIcon(array $icon = []): void
+	public function addData(array $data = []): void
 	{
-		$this->data->icon = $icon;
+		$this->data = array_merge($this->data, $data);
 	}
 
 
 	public function setTitle(?string $title): void
 	{
-		$title == null ?: $this->data->title = $title;
+		$title == null ?: $this->data['title'] = $title;
 	}
 
 
 	public function __toString(): string
 	{
-		return Json::encode($this->data);
+		return Json::encode($this->data, JSON_OBJECT_AS_ARRAY);
 	}
 }

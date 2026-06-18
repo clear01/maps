@@ -15,7 +15,7 @@
     "nette/forms": "^2.4|^3.0",
     "latte/latte": "^2.4|^2.5",
     "nette/utils": "^2.0|^3.0",
-    "nette/php-generator": "^3.0",
+    "nette/php-generator": "^2.0|^3.0",
     "nette/di": "^2.4|^3.0"
   },
   "autoload": {

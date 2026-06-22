@@ -1,10 +1,12 @@
 Maps.Suggestion = class {
     queryCache = {}
     apiKey;
+    noresult;
     lang;
     placeholder;
 
-    constructor(apiKey, placeholder, lang) {
+    constructor(apiKey, placeholder, noresult, lang) {
+        this.noresult = noresult ?? "Žádné výsledky pro dotaz";
         this.lang = lang ?? 'cs';
         this.placeholder = placeholder ?? "Zadejte adresu pro vyhledávání";
         this.apiKey = apiKey;
@@ -46,7 +48,7 @@ Maps.Suggestion = class {
 
                         message.setAttribute("class", "no_result");
                         message.style = "padding: 5px";
-                        message.innerHTML = `<span>Žádné výsledky pro dotaz "${data.query}"</span>`;
+                        message.innerHTML = `<span>${this.noresult} "${data.query}"</span>`;
                         list.prepend(message);
                     } else {
                         let logoHolder = document.createElement("div");

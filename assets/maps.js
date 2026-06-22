@@ -134,7 +134,7 @@ Maps.Factory = class {
         return new Maps.MapControl(settings);
     }
 
-    static createSuggestion(apiKey, placeholder, lang) {
-        return new Maps.Suggestion(apiKey, placeholder, lang);
+    static createSuggestion(apiKey, placeholder, noresult, lang) {
+        return new Maps.Suggestion(apiKey, placeholder, noresult, lang);
     }
 };

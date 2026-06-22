@@ -1,14 +1,18 @@
 Maps.Suggestion = class {
     queryCache = {}
     apiKey;
+    lang;
+    placeholder;
 
-    constructor(apiKey) {
+    constructor(apiKey, placeholder, lang) {
+        this.lang = lang ?? 'cs';
+        this.placeholder = placeholder ?? "Zadejte adresu pro vyhledávání";
         this.apiKey = apiKey;
     }
     init(inputElem, onSelect, types = ['regional.municipality', 'regional.municipality_part', 'regional.street', 'regional.address', 'coordinate']) {
         // get items by query
         let autoCompleteJS = new autoComplete({
-            selector: () => inputElem, placeHolder: "Zadejte adresu pro vyhledávání", searchEngine: (query, record) => `<mark>${record}</mark>`, data: {
+            selector: () => inputElem, placeHolder: this.placeholder, searchEngine: (query, record) => `<mark>${record}</mark>`, data: {
                 keys: ["value"], src: async (query) => {
                     // get items for current query
                     let items = await this.getItems(query, types);
@@ -69,7 +73,7 @@ Maps.Suggestion = class {
         try {
             let url = new URL(`https://api.mapy.cz/v1/suggest`);
 
-            url.searchParams.set('lang', 'cs');
+            url.searchParams.set('lang', this.lang);
             url.searchParams.set('apikey', this.apiKey);
             url.searchParams.set('query', query);
             url.searchParams.set('limit', '5');

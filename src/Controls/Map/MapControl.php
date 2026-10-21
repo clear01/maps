@@ -6,51 +6,54 @@ namespace Clear01\Maps\Controls\Map;
 use Clear01\Maps\Models\Marker;
 use Clear01\Maps\Models\Settings;
 use Nette\Application\UI\Control;
-use function rand;
+use function random_int;
 
 class MapControl extends Control
 {
 
-	const TEMPLATE = __DIR__ . '/template.latte';
+	public const TEMPLATE = __DIR__ . '/template.latte';
 
-	/**
-	 * @var Marker[]
-	 */
-	protected $markers = [];
-
-
-	protected $settings;
+	protected Settings $settings;
 
 
 	public function __construct(string $apiKey, array $settings = [])
 	{
-
 		$this->settings = new Settings(['apiKey' => $apiKey] + $settings);
 	}
 
 
-	public function addMarker(Marker $marker)
+	public function addMarker(Marker $marker): void
 	{
-		$this->settings->markers[] = (string) $marker;
+		$markers = $this->settings->markers;
+		$markers[] = (string) $marker;
+		$this->settings->markers = $markers;
 	}
 
 
-	public function updateSettings(string $key, $value)
+	public function updateSettings(string $key, mixed $value): void
 	{
 		$this->settings[$key] = $value;
 	}
 
-	public function getIdentifier()
+
+	public function getSettings(): Settings
 	{
-		return "map-" . $this->getUniqueId() . '-' . rand(1, 1000000);
+		return $this->settings;
 	}
 
 
-	public function render()
+	public function getIdentifier(): string
 	{
-		$this->template->identifier = $this->getIdentifier();
-		$this->template->settings = $this->settings;
-		$this->template->setFile(self::TEMPLATE);
-		$this->template->render();
+		return "map-" . $this->getUniqueId() . '-' . random_int(1, 1000000);
+	}
+
+
+	public function render(): void
+	{
+		$template = $this->template;
+		$template->identifier = $this->getIdentifier();
+		$template->settings = $this->settings;
+		$template->setFile(self::TEMPLATE);
+		$template->render();
 	}
 }

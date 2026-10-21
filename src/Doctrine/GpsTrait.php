@@ -6,18 +6,23 @@ namespace Clear01\Maps\Doctrine;
 use Doctrine\ORM\Mapping as ORM;
 use Clear01\Maps\Models\GpsCoords;
 
+/**
+ * Latitude and longitude columns for a Doctrine entity (annotation and attribute mapping).
+ */
 trait GpsTrait
 {
 	/**
 	 * @var string|null
 	 * @ORM\Column(name="latitude", type="decimal", precision=20, scale=16, nullable=true)
 	 */
+	#[ORM\Column(name: 'latitude', type: 'decimal', precision: 20, scale: 16, nullable: true)]
 	protected $latitude;
 
 	/**
 	 * @var string|null
 	 * @ORM\Column(name="longitude", type="decimal", precision=20, scale=16, nullable=true)
 	 */
+	#[ORM\Column(name: 'longitude', type: 'decimal', precision: 20, scale: 16, nullable: true)]
 	protected $longitude;
 
 
@@ -34,12 +39,12 @@ trait GpsTrait
 
 	public function getLatitude(): ?float
 	{
-		return $this->getGps() ? $this->getGps()->getLatitude() : null;
+		return $this->getGps()?->getLatitude();
 	}
 
 
 	public function getLongitude(): ?float
 	{
-		return $this->getGps() ? $this->getGps()->getLongitude() : null;
+		return $this->getGps()?->getLongitude();
 	}
 }

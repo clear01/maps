@@ -4,10 +4,14 @@ namespace Clear01\Maps\Models;
 
 use Nette\Utils\ArrayHash;
 
+/**
+ * Map settings passed to the JS driver (serialized to JSON in templates).
+ * Every key is a public (dynamic) property of the ArrayHash.
+ */
 class Settings extends ArrayHash
 {
 
-	protected $settings = [
+	public const DEFAULTS = [
 		"width"       => '100%',
 		"height"      => '600px',
 		"center"      => [
@@ -22,14 +26,8 @@ class Settings extends ArrayHash
 
 	public function __construct(array $settings = [])
 	{
-		foreach ($this->settings as $key => $value) {
-			$this->$key = $value;
-		}
-		foreach ($settings as $key => $value) {
+		foreach ($settings + self::DEFAULTS as $key => $value) {
 			$this->$key = $value;
 		}
 	}
-
-
-
 }

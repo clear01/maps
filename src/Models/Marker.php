@@ -3,18 +3,17 @@ declare(strict_types = 1);
 
 namespace Clear01\Maps\Models;
 
-use Clear01\Maps\Exceptions\MapException;
 use Nette\Utils\Json;
+use Stringable;
 use function array_merge;
-use const JSON_OBJECT_AS_ARRAY;
 
-class Marker
+class Marker implements Stringable
 {
-	private $data = [];
+	private array $data = [];
 
 
 	/**
-	 * @param array $icon https://leafletjs.com/examples/custom-icons/
+	 * @param array $data extra marker options, e.g. 'icon' or 'divIcon' (https://leafletjs.com/examples/custom-icons/)
 	 */
 	public function __construct(
 		GpsCoords $gps,
@@ -49,12 +48,20 @@ class Marker
 
 	public function setTitle(?string $title): void
 	{
-		$title == null ?: $this->data['title'] = $title;
+		if ($title !== null && $title !== '') {
+			$this->data['title'] = $title;
+		}
+	}
+
+
+	public function getData(): array
+	{
+		return $this->data;
 	}
 
 
 	public function __toString(): string
 	{
-		return Json::encode($this->data, JSON_OBJECT_AS_ARRAY);
+		return Json::encode($this->data);
 	}
 }

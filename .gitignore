@@ -7,3 +7,6 @@
 .idea/vcs.xml
 /vendor/
 .idea/php.xml
+/composer.lock
+/tests/temp/
+/tests/**/output/

@@ -3,6 +3,13 @@ Map gps picker, map with marker control and address suggestion for Nette Framewo
 
 Inspired by https://github.com/occ2/nette-mapy-cz
 
+## Requirements
+- PHP 8.3+ (tested on 8.4)
+- Nette Application / Forms / DI 3.2+, Nette Utils 4, Latte 3.0.18+ (3.0 and 3.1)
+- optional: `doctrine/dbal` ^3.10 for `Clear01\Maps\Doctrine\GpsCoordsType`, `doctrine/orm` ^2.20 for `Clear01\Maps\Doctrine\GpsTrait`
+
+Upgrading from 0.x (Nette 2.4 / Latte 2)? See [UPGRADE.md](UPGRADE.md).
+
 ## Installation
 ```bash
 composer require clear01/maps
@@ -12,6 +19,8 @@ composer require clear01/maps
 Add assets/maps.js into your js loader
 
 Add selected driver into your js loader
+
+The inline scripts of the controls use jQuery (`$(modal)`) only for the Bootstrap modal fix.
 
 ## Add Leaflet js and project javascript files to your page heading
 ```html
@@ -30,54 +39,65 @@ Add selected driver into your js loader
 ```
 
 ## Setup config
-Register control factory as service in your config.neon register extension add picker to you forms
+Register the extension. It registers `IMapControlFactory` as a service and the form methods `addGpsPicker()` and `addAddressSuggestion()`.
 ```yaml
-# register method addGpsPicker to your forms
 extensions:
   maps: Clear01\Maps\DI\MapsExtension
 
 maps:
-  #api key for map based on selected driver 
+  #api key for map based on selected driver
   mapApiKey: "your_api_key" #https://developer.mapy.com/cs/rest-api/jak-zacit/
   #api key for suggestion based on selected driver
-  suggestionApiKey: "your_api_key" 
+  suggestionApiKey: "your_api_key"
+```
+Both keys are optional strings (default `''`), unknown keys are rejected by the config schema.
 
+Doctrine type (DBAL 3, e.g. with nettrine/dbal):
+```yaml
+nettrine.dbal:
+  connection:
+    types:
+      gps_coords: Clear01\Maps\Doctrine\GpsCoordsType
 ```
 
-## Usage 
+## Usage
 In your presenter
 ```php
-use Clear01\Maps\Controls\MapControl\Factories\IMapControlFactory;
-use Clear01\Maps\Controls\MapControl;
+use Clear01\Maps\Controls\Map\IMapControlFactory;
+use Clear01\Maps\Controls\Map\MapControl;
+use Clear01\Maps\Models\GpsCoords;
+use Clear01\Maps\Models\Marker;
 use Nette\Application\UI\Form;
 
-/**
- * @var IMapControlFactory
- * @inject
- */
-public $mapControlFactory;
+#[Nette\DI\Attributes\Inject]
+public IMapControlFactory $mapControlFactory;
 
 ...
 
 
-protected function createComponentMap(string $name): MapControl
+protected function createComponentMap(): MapControl
 {
-    $control = $this->mapControlFactory->create();
-    $control->addMarker(new Marker(50.2, 17.1, 'Titletext'));
-   
+    $control = $this->mapControlFactory->create(['height' => '400px']);
+    $control->addMarker(new Marker(new GpsCoords(50.2, 17.1), 'Titletext'));
+    #custom icon: https://leafletjs.com/examples/custom-icons/
+    $control->addMarker(new Marker(new GpsCoords(50.3, 17.2), 'Other', ['divIcon' => ['className' => 'pin', 'html' => '<span></span>']]));
+
     return $control;
 }
 
 ...
 
 
-protected function createComponentForm(string $name): Form
+protected function createComponentForm(): Form
 {
 	$form = new Form();
 	$gpsInput = $form->addGpsPicker('gps', 'Select location');
 	$form->addAddressSuggestion('street', 'Address');
 	$form->addSubmit('send', 'Submit');
-	
+
+	#default value can be GpsCoords, string "lat lng" or null
+	$form->setDefaults(['gps' => new GpsCoords(49.19, 16.60)]);
+
 	$form->onSuccess[] = function (Form $form, $values) use ($gpsInput) {
 		//$gpsInput->getGps() returns GpsCoords or null
 		$gpsInput->getGps();
@@ -85,8 +105,12 @@ protected function createComponentForm(string $name): Form
 	return $form;
 }
 ```
+GpsPicker validates the value: format `"latitude longitude"` (whitespace separated, optional `N`/`E` suffix, negative values allowed) and the range of the coordinates. Invalid coordinates throw `Clear01\Maps\Exceptions\MapException` from `new GpsCoords()` / `GpsCoords::fromString()`.
+
 You must set callback in template for suggestion (event - maps.address.select):
 Structure for mapy.cz API can be found here: https://developer.mapy.com/cs/rest-api/funkce/geokodovani/
+
+Latte 3 prints variables in `<script>` as JS values (JSON) — never put `{$var}` inside a JS string literal (`"#{$id}"` is a compile error), concatenate instead:
 
 ```html
 {input street}
@@ -109,10 +133,16 @@ Structure for mapy.cz API can be found here: https://developer.mapy.com/cs/rest-
         if (origData.zip) {
             document.querySelector('#frm-address-form-postcode').value = origData.zip;
         }
-        
+
     })
 </script>
 
 ```
 
 For suggestion you need to install https://tarekraafat.github.io/autoComplete.js/
+
+## Tests
+```bash
+composer install
+vendor/bin/tester -C tests
+```

@@ -3,43 +3,34 @@ declare(strict_types = 1);
 
 namespace Clear01\Maps\Controls\AddressSuggestion;
 
-use Clear01\Maps\Exceptions\MapException;
-use Clear01\Maps\Models\GpsCoords;
-use Clear01\Maps\Models\Settings;
-use Nette\Application\UI\ITemplate;
-use Nette\Application\UI\Presenter;
+use Clear01\Maps\Controls\TemplateRenderer;
 use Nette\Forms\Container;
 use Nette\Forms\Controls\TextInput;
-use Nette\Forms\Form;
 use Nette\Utils\Html;
+use Stringable;
 
 class AddressSuggestion extends TextInput
 {
+	use TemplateRenderer;
 
-	/**
-	 * @var ITemplate
-	 */
-	protected $template;
+	public const TEMPLATE = __DIR__ . '/template.latte';
 
-	protected $apiKey;
+	protected string $apiKey;
 
 
-	public function __construct(string $apiKey, $label = null, $maxLength = null)
+	public function __construct(string $apiKey, string|Stringable|null $label = null, ?int $maxLength = null)
 	{
 		parent::__construct($label, $maxLength);
-		$this->monitor(Presenter::class, function (Presenter $presenter) {
-			$this->template = $presenter->getTemplateFactory()->createTemplate();
-		});
 		$this->apiKey = $apiKey;
 	}
 
 
-	public static function register(string $apiKey)
+	public static function register(string $apiKey): void
 	{
 		Container::extensionMethod(
 			'addAddressSuggestion',
-			function ($container, $name, $label = null, $maxLength = null) use ($apiKey) {
-				return $container[$name] = new AddressSuggestion($apiKey, $label, $maxLength);
+			function (Container $container, string $name, string|Stringable|null $label = null, ?int $maxLength = null) use ($apiKey): self {
+				return $container[$name] = new self($apiKey, $label, $maxLength);
 			}
 		);
 	}
@@ -48,12 +39,11 @@ class AddressSuggestion extends TextInput
 	public function getControl(): Html
 	{
 		$control = parent::getControl();
-		$this->template->inputId = $this->getHtmlId();
-		$this->template->apiKey = $this->apiKey;
-		$this->template->control = $control->class('form-control');
-		$this->template->setFile(__DIR__ . '/template.latte');
 
-		return Html::el('')->setHtml($this->template->render());
+		return Html::el()->setHtml($this->renderTemplate(self::TEMPLATE, [
+			'inputId' => $this->getHtmlId(),
+			'apiKey' => $this->apiKey,
+			'input' => $control->class('form-control'),
+		]));
 	}
-
 }

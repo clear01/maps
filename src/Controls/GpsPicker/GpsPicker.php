@@ -3,52 +3,75 @@ declare(strict_types = 1);
 
 namespace Clear01\Maps\Controls\GpsPicker;
 
+use Clear01\Maps\Controls\TemplateRenderer;
 use Clear01\Maps\Exceptions\MapException;
 use Clear01\Maps\Models\GpsCoords;
 use Clear01\Maps\Models\Settings;
-use Nette\Application\UI\ITemplate;
-use Nette\Application\UI\Presenter;
 use Nette\Forms\Container;
 use Nette\Forms\Controls\TextInput;
 use Nette\Forms\Form;
 use Nette\Utils\Html;
+use Stringable;
 
 class GpsPicker extends TextInput
 {
+	use TemplateRenderer;
 
-	/**
-	 * @var ITemplate
-	 */
-	protected $template;
+	public const TEMPLATE = __DIR__ . '/template.latte';
 
-	protected $settings;
+	protected Settings $settings;
 
 
-	public function __construct(string $apiKey, string $suggestionApiKey, $label = null, $maxLength = null)
+	public function __construct(string $apiKey, string $suggestionApiKey, string|Stringable|null $label = null, ?int $maxLength = null)
 	{
 		parent::__construct($label, $maxLength);
 
-		$this->monitor(Presenter::class, function (Presenter $presenter) use ($apiKey, $suggestionApiKey) {
-			$this->template = $presenter->getTemplateFactory()->createTemplate();
-			$this->settings = new Settings(['inputId' => $this->getHtmlId(), 'apiKey' => $apiKey,'suggestionApiKey' => $suggestionApiKey, 'height' => '400px', 'defaultZoom' => 13]);
-		});
+		$this->settings = new Settings(['apiKey' => $apiKey, 'suggestionApiKey' => $suggestionApiKey, 'height' => '400px', 'defaultZoom' => 13]);
 
-		$this->addCondition(Form::FILLED)->addRule(Form::PATTERN, 'Gps souřadnice musí být ve tvaru "xx.xxxxx yy.yyyyy" kde x je zeměpisná šířka a y je zeměpisná dělka.', '^(\d*\.)?\d*N?\s+(\d*\.)?\d*E?$');
+		$this->addCondition(Form::Filled)
+		     ->addRule(Form::Pattern, 'Gps souřadnice musí být ve tvaru "xx.xxxxx yy.yyyyy" kde x je zeměpisná šířka a y je zeměpisná dělka.', '^-?(\d*\.)?\d*N?\s+-?(\d*\.)?\d*E?$')
+		     ->addRule([self::class, 'validateGps'], 'Neplatné GPS souřadnice.');
 	}
 
 
-	public static function register(string $apiKey, string $suggestionApiKey)
+	public static function register(string $apiKey, string $suggestionApiKey): void
 	{
 		Container::extensionMethod(
 			'addGpsPicker',
-			function ($container, $name, $label = null, $maxLength = null) use ($apiKey, $suggestionApiKey) {
-				return $container[$name] = new GpsPicker($apiKey, $suggestionApiKey, $label, $maxLength);
+			function (Container $container, string $name, string|Stringable|null $label = null, ?int $maxLength = null) use ($apiKey, $suggestionApiKey): self {
+				return $container[$name] = new self($apiKey, $suggestionApiKey, $label, $maxLength);
 			}
 		);
 	}
 
 
-	public function getIdentifier()
+	/**
+	 * Validator: the value must be parseable coordinates within range.
+	 */
+	public static function validateGps(self $control): bool
+	{
+		try {
+			return $control->getGps() !== null;
+		} catch (MapException $e) {
+			return false;
+		}
+	}
+
+
+	/**
+	 * Accepts GpsCoords, string "latitude longitude" or null.
+	 */
+	public function setValue($value): static
+	{
+		if ($value instanceof GpsCoords) {
+			$value = (string) $value;
+		}
+
+		return parent::setValue($value);
+	}
+
+
+	public function getIdentifier(): string
 	{
 		return "map-" . $this->getHtmlId();
 	}
@@ -57,33 +80,41 @@ class GpsPicker extends TextInput
 	public function getControl(): Html
 	{
 		$control = parent::getControl();
-		$this->template->settings = $this->settings;
-		$this->template->identifier = $this->getIdentifier();
-		$this->template->gps = $this->getGps();
-		$this->template->control = $control->class('form-control');
-		$this->template->setFile(__DIR__ . '/template.latte');
+		$settings = clone $this->settings;
+		$settings->inputId = $this->getHtmlId();
 
-		return Html::el('')->setHtml($this->template->render());
+		try {
+			$gps = $this->getGps();
+		} catch (MapException $e) {
+			$gps = null;
+		}
+
+		return Html::el()->setHtml($this->renderTemplate(self::TEMPLATE, [
+			'settings' => $settings,
+			'identifier' => $this->getIdentifier(),
+			'gps' => $gps,
+			'input' => $control->class('form-control'),
+		]));
 	}
 
-	public function updateSettings(string $key, $value)
+
+	public function updateSettings(string $key, mixed $value): void
 	{
 		$this->settings[$key] = $value;
 	}
 
 
+	/**
+	 * @throws MapException when the coordinates are out of range
+	 */
 	public function getGps(): ?GpsCoords
 	{
-		if ($this->value instanceof GpsCoords) {
-			return $this->value;
+		$value = $this->getValue();
+		if ($value instanceof GpsCoords) {
+			return $value;
 		}
-		if (is_string($this->value) && !empty($this->value)) {
-			$a = explode(" ", $this->value);
-			if (count($a) != 2) {
-				return null;
-			}
-
-			return new GpsCoords((float) $a[0], (float) $a[1]);
+		if (is_string($value)) {
+			return GpsCoords::fromString($value);
 		}
 
 		return null;

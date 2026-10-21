@@ -10,15 +10,28 @@
     }
   ],
   "require": {
-    "php": "^7.2",
-    "nette/application": "^2.4|^3.0",
-    "nette/forms": "^2.4|^3.0",
-    "latte/latte": "^2.4|^2.5",
-    "nette/utils": "^2.0|^3.0",
-    "nette/php-generator": "^2.0|^3.0",
-    "nette/di": "^2.4|^3.0"
+    "php": ">=8.3",
+    "nette/application": "^3.2",
+    "nette/forms": "^3.2",
+    "latte/latte": "^3.0.18",
+    "nette/utils": "^4.0",
+    "nette/schema": "^1.3",
+    "nette/di": "^3.2"
+  },
+  "require-dev": {
+    "nette/tester": "^2.5",
+    "nette/http": "^3.3",
+    "doctrine/dbal": "^3.10",
+    "doctrine/orm": "^2.20"
+  },
+  "suggest": {
+    "doctrine/dbal": "^3.10 - for Clear01\\Maps\\Doctrine\\GpsCoordsType",
+    "doctrine/orm": "^2.20 - for Clear01\\Maps\\Doctrine\\GpsTrait"
   },
   "autoload": {
     "psr-4": { "Clear01\\Maps\\": "src/"}
+  },
+  "scripts": {
+    "test": "tester -C tests"
   }
 }
